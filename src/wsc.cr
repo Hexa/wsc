@@ -49,20 +49,48 @@ module Wsc
       @ws = HTTP::WebSocket.new(host, path, port, tls, headers)
     end
 
-    def run
+    def on_message
       @ws.on_message do |message|
         puts "on_message: #{message}"
       end
+    end
 
+    def on_message(proc : Proc)
+      @ws.on_message do |message|
+        proc.call(message)
+      end
+    end
+
+    def on_binary(proc : Proc)
+      @ws.on_binary do |binary|
+        proc.call(binary)
+      end
+    end
+
+    def on_binary
       @ws.on_binary do |binary|
         puts "on_binary: #{binary.hexdump}"
       end
+    end
 
+    def on_close
       @ws.on_close do |message|
         puts "on_close: #{message}"
       end
+    end
 
+    def on_close(proc : Proc)
+      @ws.on_close do |message|
+        proc.call(message)
+      end
+    end
+
+    def run
       @ws.run
+    end
+
+    def close
+      @ws.close
     end
 
     def self.run(uri : String)
@@ -75,14 +103,34 @@ module Wsc
 
     def self.run(uri : String, headers : HTTP::Headers, insecure : Bool)
       wsc = Wsc::App.new(uri, headers, insecure)
+      wsc.on_message
+      wsc.on_binary
+      wsc.on_close
       wsc.run
     end
   end
 end
 
+def on_message(message : String)
+  puts message
+end
+
+def on_binary(binary : Bytes)
+  puts binary.hexdump
+end
+
+def on_close(message : String)
+  puts message
+end
+
 begin
   headers = HTTP::Headers.new
-  Wsc::App.run(uri, headers, insecure)
+  # Wsc::App.run(uri, headers, insecure)
+  wsc = Wsc::App.new(uri, headers, insecure)
+  wsc.on_message(->on_message(String))
+  wsc.on_binary(->on_binary(Bytes))
+  wsc.on_close(->on_close(String))
+  wsc.run
 rescue ex
   puts ex.message
   exit 1
