@@ -61,6 +61,10 @@ module Wsc
       end
     end
 
+    def on_message(&block : String ->)
+      @ws.on_message &block
+    end
+
     def on_binary(proc : Proc)
       @ws.on_binary do |binary|
         proc.call(binary)
@@ -73,6 +77,10 @@ module Wsc
       end
     end
 
+    def on_binary(&block : Bytes ->)
+      @ws.on_binary &block
+    end
+
     def on_close
       @ws.on_close do |message|
         puts "on_close: #{message}"
@@ -83,6 +91,10 @@ module Wsc
       @ws.on_close do |message|
         proc.call(message)
       end
+    end
+
+    def on_close(&block : String ->)
+      @ws.on_close &block
     end
 
     def run
@@ -111,25 +123,19 @@ module Wsc
   end
 end
 
-def on_message(message : String)
-  puts message
-end
-
-def on_binary(binary : Bytes)
-  puts binary.hexdump
-end
-
-def on_close(message : String)
-  puts message
-end
-
 begin
   headers = HTTP::Headers.new
-  # Wsc::App.run(uri, headers, insecure)
   wsc = Wsc::App.new(uri, headers, insecure)
-  wsc.on_message(->on_message(String))
-  wsc.on_binary(->on_binary(Bytes))
-  wsc.on_close(->on_close(String))
+  wsc.on_message do |message|
+    puts message
+    message
+  end
+  wsc.on_binary do |binary|
+    puts binary.hexdump
+  end
+  wsc.on_close do |message|
+    puts message
+  end
   wsc.run
 rescue ex
   puts ex.message
