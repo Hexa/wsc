@@ -2,7 +2,8 @@ require "./spec_helper"
 
 class TestWsServer
   CERTIFICATES = "./spec/server.pem"
-  PRIVATE_KEY = "./spec/server.key"
+  PRIVATE_KEY  = "./spec/server.key"
+
   def self.run(host : String, port : Int, handlers)
     TestWsServer.run(host, port, handlers, false)
   end
@@ -33,10 +34,7 @@ handlers = [
       sleep 1
       context.close("close")
     end
-    context.on_message do |message|
-      context.send(message)
-    end
-  end
+  end,
 ] of HTTP::Handler
 
 describe Wsc do
@@ -44,15 +42,36 @@ describe Wsc do
     server = TestWsServer.run(HOST, PORT, handlers)
     headers = HTTP::Headers.new
     uri = "ws://#{HOST}:#{PORT}/"
-    Wsc::App.run(uri, headers)
+    wsc = Wsc::App.new(uri, headers, false)
+    ch1 = Channel(String).new
+    ch2 = Channel(String).new
+    wsc.on_message { |message| ch1.send(message) }
+    wsc.on_close { |message| ch2.send(message) }
+    spawn do
+      wsc.run
+    end
+    ch3 = Channel(Symbol).new
+    spawn do
+      sleep 2
+      ch3.send(:timeout)
+    end
+    loop do
+      select
+      when message = ch1.receive
+        message.should eq("open")
+        ch1.close
+      when message = ch2.receive
+        message.should eq("close")
+        ch2.close
+        ch3.close
+        break
+      when ch3.receive
+        ch3.close
+        fail "Timeout"
+        break
+      end
+    end
     server.close
-  end
-
-  it "" do
-    server = TestWsServer.run(HOST, PORT, handlers, true)
-    headers = HTTP::Headers.new
-    uri = "wss://#{HOST}:#{PORT}/"
-    Wsc::App.run(uri, headers, true)
-    server.close
+    wsc.close
   end
 end

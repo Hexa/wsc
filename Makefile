@@ -14,3 +14,12 @@ ubuntu-14.04 ubuntu-16.04 ubuntu-18.04:
 	rm wsc
 	docker container rm wsc-$(TARGET)
 	docker image rm wsc:$(TARGET)
+
+
+.PHONY: spec format
+
+spec:
+	crystal spec
+
+format:
+	crystal tool format src
