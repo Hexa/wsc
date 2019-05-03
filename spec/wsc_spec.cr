@@ -27,6 +27,7 @@ end
 
 HOST = "127.0.0.1"
 PORT = 50000
+TLS_PORT = PORT + 1
 handlers = [
   HTTP::WebSocketHandler.new do |context|
     spawn do
@@ -35,10 +36,10 @@ handlers = [
       context.close("close")
     end
   end,
-] of HTTP::Handler
+]
 
 describe Wsc do
-  it "" do
+  it do
     server = TestWsServer.run(HOST, PORT, handlers)
     headers = HTTP::Headers.new
     uri = "ws://#{HOST}:#{PORT}/"
@@ -47,13 +48,46 @@ describe Wsc do
     ch2 = Channel(String).new
     wsc.on_message { |message| ch1.send(message) }
     wsc.on_close { |message| ch2.send(message) }
-    spawn do
-      wsc.run
-    end
+    spawn { wsc.run }
     ch3 = Channel(Symbol).new
     spawn do
       sleep 2
-      ch3.send(:timeout)
+      ch3.send(:timeout) unless ch3.closed?
+    end
+    loop do
+      select
+      when message = ch1.receive
+        message.should eq("open")
+        ch1.close
+      when message = ch2.receive
+        message.should eq("close")
+        ch2.close
+        ch3.close
+        break
+      when ch3.receive
+        ch3.close
+        fail "Timeout"
+        break
+      end
+    end
+    server.close
+    wsc.close
+  end
+
+  it do
+    server = TestWsServer.run(HOST, PORT, handlers, true)
+    headers = HTTP::Headers.new
+    uri = "wss://#{HOST}:#{PORT}/"
+    wsc = Wsc::App.new(uri, headers, true)
+    ch1 = Channel(String).new
+    ch2 = Channel(String).new
+    wsc.on_message { |message| ch1.send(message) }
+    wsc.on_close { |message| ch2.send(message) }
+    spawn { wsc.run }
+    ch3 = Channel(Symbol).new
+    spawn do
+      sleep 2
+      ch3.send(:timeout) unless ch3.closed?
     end
     loop do
       select
