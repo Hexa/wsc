@@ -30,6 +30,7 @@ module Wsc
       scheme = @uri.scheme
       host = @uri.host || DEFAULT_HOST
       path = @uri.path || DEFAULT_PATH
+      query = ("?#{@uri.query}" unless @uri.query.empty?) || ""
       tls = false
 
       if scheme == "wss"
@@ -46,7 +47,7 @@ module Wsc
         raise "UNEXPECTED-URI"
       end
 
-      @ws = HTTP::WebSocket.new(host, path, port, tls, headers)
+      @ws = HTTP::WebSocket.new(host, "#{path}#{query}", port, tls, headers)
     end
 
     def on_message
