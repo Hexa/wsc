@@ -21,7 +21,7 @@ end
 module Wsc
   class App
     DEFAULT_HOST     = "127.0.0.1"
-    DEFAULT_PORT     =  80
+    DEFAULT_PORT     = 50000
     DEFAULT_TLS_PORT = 443
     DEFAULT_PATH     = "/"
 
@@ -87,14 +87,24 @@ module Wsc
       end
     end
 
-    def on_close(proc : Proc)
-      @ws.on_close do |message|
-        proc.call(message)
-      end
-    end
-
     def on_close(&block : String ->)
       @ws.on_close &block
+    end
+
+    def on_ping(&block : String ->)
+      @ws.on_ping &block
+    end
+
+    def on_pong(&block : String ->)
+      @ws.on_pong &block
+    end
+
+    def ping(message : String | Nil = nil)
+      @ws.ping message
+    end
+
+    def pong(message : String | Nil = nil)
+      @ws.pong message
     end
 
     def run
