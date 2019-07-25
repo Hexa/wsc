@@ -1,5 +1,15 @@
 require "./spec_helper"
 
+def timer(delay : Int) : Channel(Symbol)
+  timer_ch = Channel(Symbol).new
+  spawn do
+    sleep delay
+    timer_ch.send(:timeout) unless timer_ch.closed?
+  end
+
+  timer_ch
+end
+
 class TestWsServer
   CERTIFICATES = "./spec/server.pem"
   PRIVATE_KEY  = "./spec/server.key"
@@ -44,28 +54,24 @@ describe Wsc do
     headers = HTTP::Headers.new
     uri = "ws://#{HOST}:#{PORT}/"
     wsc = Wsc::App.new(uri, headers, false)
-    ch1 = Channel(String).new
-    ch2 = Channel(String).new
-    wsc.on_message { |message| ch1.send(message) }
-    wsc.on_close { |message| ch2.send(message) }
+    message_ch = Channel(String).new
+    close_ch = Channel(String).new
+    wsc.on_message { |message| message_ch.send(message) }
+    wsc.on_close { |message| close_ch.send(message) }
     spawn { wsc.run }
-    ch3 = Channel(Symbol).new
-    spawn do
-      sleep 2
-      ch3.send(:timeout) unless ch3.closed?
-    end
+    timer_ch = timer(2)
     loop do
       select
-      when message = ch1.receive
+      when message = message_ch.receive
         message.should eq("open")
-        ch1.close
-      when message = ch2.receive
+        message_ch.close
+      when message = close_ch.receive
         message.should eq("close")
-        ch2.close
-        ch3.close
+        close_ch.close
+        timer_ch.close
         break
-      when ch3.receive
-        ch3.close
+      when timer_ch.receive
+        timer_ch.close
         fail "Timeout"
         break
       end
@@ -74,85 +80,77 @@ describe Wsc do
     wsc.close
   end
 
-   it do
-     server = TestWsServer.run(HOST, PORT, handlers, true)
-     headers = HTTP::Headers.new
-     uri = "wss://#{HOST}:#{PORT}/"
-     wsc = Wsc::App.new(uri, headers, true)
-     ch1 = Channel(String).new
-     ch2 = Channel(String).new
-     wsc.on_message { |message| ch1.send(message) }
-     wsc.on_close { |message| ch2.send(message) }
-     spawn { wsc.run }
-     ch3 = Channel(Symbol).new
-     spawn do
-       sleep 2
-       ch3.send(:timeout) unless ch3.closed?
-     end
-     loop do
-       select
-       when message = ch1.receive
-         message.should eq("open")
-         ch1.close
-       when message = ch2.receive
-         message.should eq("close")
-         ch2.close
-         ch3.close
-         break
-       when ch3.receive
-         ch3.close
-         fail "Timeout"
-         break
-       end
-     end
-     server.close
-     wsc.close
-   end
+  it do
+    server = TestWsServer.run(HOST, PORT, handlers, true)
+    headers = HTTP::Headers.new
+    uri = "wss://#{HOST}:#{PORT}/"
+    wsc = Wsc::App.new(uri, headers, true)
+    message_ch = Channel(String).new
+    close_ch = Channel(String).new
+    wsc.on_message { |message| message_ch.send(message) }
+    wsc.on_close { |message| close_ch.send(message) }
+    spawn { wsc.run }
+    timer_ch = timer(2)
+    loop do
+      select
+      when message = message_ch.receive
+        message.should eq("open")
+        message_ch.close
+      when message = close_ch.receive
+        message.should eq("close")
+        close_ch.close
+        timer_ch.close
+        break
+      when timer_ch.receive
+        timer_ch.close
+        fail "Timeout"
+        break
+      end
+    end
+    server.close
+    wsc.close
+  end
 
-   it do
-     server = TestWsServer.run(HOST, PORT, handlers, true)
-     headers = HTTP::Headers.new
-     uri = "wss://#{HOST}:#{PORT}/"
-     wsc = Wsc::App.new(uri, headers, true)
-     ch1 = Channel(String).new
-     ch2 = Channel(String).new
-     ch3 = Channel(String).new
-     wsc.on_message { |message| ch1.send(message) }
-     wsc.on_close { |message| ch2.send(message) }
-     wsc.on_pong do |message|
-       ch3.send(message)
-     end
-     wsc.ping("ping")
-     spawn { wsc.run }
-     ch4 = Channel(Symbol).new
-     spawn do
-       sleep 2
-       ch4.send(:timeout) unless ch4.closed?
-     end
-     loop do
-       select
-       when message = ch1.receive
-         message.should eq("open")
-         ch1.close
-       when message = ch2.receive
-         message.should eq("close")
-         ch2.close
-         ch4.close
-         break
-       when message = ch3.receive
-         message.should eq("ping")
-         ch3.close
-       when ch4.receive
-         ch4.close
-         fail "Timeout"
-         break
-       end
-     end
-     ch1.closed?.should eq(true)
-     ch2.closed?.should eq(true)
-     ch3.closed?.should eq(true)
-     ch4.closed?.should eq(true)
-     server.close
-     wsc.close
-   end
+  it do
+    server = TestWsServer.run(HOST, PORT, handlers, true)
+    headers = HTTP::Headers.new
+    uri = "wss://#{HOST}:#{PORT}/"
+    wsc = Wsc::App.new(uri, headers, true)
+    message_ch = Channel(String).new
+    close_ch = Channel(String).new
+    ping_pong_ch = Channel(String).new
+    wsc.on_message { |message| message_ch.send(message) }
+    wsc.on_close { |message| close_ch.send(message) }
+    wsc.on_pong do |message|
+      ping_pong_ch.send(message)
+    end
+    wsc.ping("ping")
+    spawn { wsc.run }
+    timer_ch = timer(2)
+    loop do
+      select
+      when message = message_ch.receive
+        message.should eq("open")
+        message_ch.close
+      when message = close_ch.receive
+        message.should eq("close")
+        close_ch.close
+        timer_ch.close
+        break
+      when message = ping_pong_ch.receive
+        message.should eq("ping")
+        ping_pong_ch.close
+      when timer_ch.receive
+        timer_ch.close
+        fail "Timeout"
+        break
+      end
+    end
+    message_ch.closed?.should eq(true)
+    close_ch.closed?.should eq(true)
+    ping_pong_ch.closed?.should eq(true)
+    timer_ch.closed?.should eq(true)
+    server.close
+    wsc.close
+  end
 end

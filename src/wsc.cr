@@ -30,7 +30,8 @@ module Wsc
       scheme = @uri.scheme
       host = @uri.host || DEFAULT_HOST
       path = @uri.path || DEFAULT_PATH
-      query = ("?#{@uri.query}" unless @uri.query.empty?) || ""
+      _query = @uri.query
+      query = "?#{_query}" if (_query && !_query.empty?) || ""
       tls = false
 
       if scheme == "wss"
