@@ -21,7 +21,7 @@ end
 module Wsc
   class App
     DEFAULT_HOST     = "127.0.0.1"
-    DEFAULT_PORT     = 50000
+    DEFAULT_PORT     = 80
     DEFAULT_TLS_PORT = 443
     DEFAULT_PATH     = "/"
 
