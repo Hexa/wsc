@@ -21,7 +21,7 @@ end
 module Wsc
   class App
     DEFAULT_HOST     = "127.0.0.1"
-    DEFAULT_PORT     = 50000
+    DEFAULT_PORT     = 80
     DEFAULT_TLS_PORT = 443
     DEFAULT_PATH     = "/"
 
@@ -127,9 +127,6 @@ module Wsc
 
     def self.run(uri : String, headers : HTTP::Headers, insecure : Bool)
       wsc = Wsc::App.new(uri, headers, insecure)
-      wsc.on_message
-      wsc.on_binary
-      wsc.on_close
       wsc.run
     end
   end
