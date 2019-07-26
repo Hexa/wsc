@@ -127,9 +127,6 @@ module Wsc
 
     def self.run(uri : String, headers : HTTP::Headers, insecure : Bool)
       wsc = Wsc::App.new(uri, headers, insecure)
-      wsc.on_message
-      wsc.on_binary
-      wsc.on_close
       wsc.run
     end
   end
