@@ -1,5 +1,5 @@
 name: wsc
-version: 0.1.0
+version: 0.2.1
 
 authors:
   - Hexa <hexa.diary@gmail.com>
@@ -8,6 +8,6 @@ targets:
   wsc:
     main: src/wsc
 
-crystal: 0.25.1
+crystal: 0.29.0
 
 license: MIT
