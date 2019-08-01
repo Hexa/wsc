@@ -17,16 +17,11 @@ format:
 
 .PHONY: ubuntu-16.04 ubuntu-18.04
 
-BRANCH = develop
+BRANCH ?= develop
 TAG := $(BRANCH)
 TARGET = $@
 
 ubuntu-16.04 ubuntu-18.04:
-	docker image build -t wsc:$(TARGET) --build-arg branch=$(TAG) --no-cache - < docker/Dockerfile-$(TARGET)
-	docker container run --name wsc-$(TARGET) wsc:$(TARGET) crystal build src/wsc.cr --release
-	docker container cp wsc-$(TARGET):wsc/wsc .
+	docker image build -t wsc:$(TARGET) --build-arg branch=$(TAG) --build-arg os=$(TARGET) --no-cache --output . docker/
 	tar czf wsc-$(TARGET).tar.gz wsc
 	rm wsc
-	docker container rm wsc-$(TARGET)
-	docker image rm wsc:$(TARGET)
-

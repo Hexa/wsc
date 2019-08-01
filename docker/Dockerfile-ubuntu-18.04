@@ -1,7 +1,0 @@
-FROM hexa/crystal:ubuntu-18.04
-
-ARG branch
-
-RUN git clone -b $branch https://github.com/Hexa/wsc.git
-
-WORKDIR /wsc
