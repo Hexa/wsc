@@ -36,12 +36,8 @@ module Wsc
 
       if scheme == "wss"
         port = @uri.port || DEFAULT_PORT
-        if insecure
-          tls = OpenSSL::SSL::Context::Client.new
-          tls.verify_mode = OpenSSL::SSL::VerifyMode::NONE
-        else
-          tls = true
-        end
+        tls = OpenSSL::SSL::Context::Client.new
+        tls.verify_mode = OpenSSL::SSL::VerifyMode::NONE if insecure
       elsif scheme == "ws"
         port = @uri.port || DEFAULT_PORT
       else
