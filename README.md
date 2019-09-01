@@ -24,4 +24,4 @@ $ ./wsc -u ws://127.0.0.1:8000
 
 ## Contributors
 
-- [Hexa](https://github.com/Hexa) Hexa - creator, maintainer
+- [Hexa](https://github.com/Hexa) - creator, maintainer
