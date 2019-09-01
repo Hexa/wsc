@@ -53,7 +53,7 @@ describe Wsc do
     server = TestWsServer.run(HOST, PORT, handlers)
     headers = HTTP::Headers.new
     uri = "ws://#{HOST}:#{PORT}/"
-    wsc = Wsc::App.new(uri, headers, false)
+    wsc = Wsc::Base.new(uri, headers, false)
     message_ch = Channel(String).new
     close_ch = Channel(String).new
     wsc.on_message { |message| message_ch.send(message) }
@@ -84,7 +84,7 @@ describe Wsc do
     server = TestWsServer.run(HOST, PORT, handlers, true)
     headers = HTTP::Headers.new
     uri = "wss://#{HOST}:#{PORT}/"
-    wsc = Wsc::App.new(uri, headers, true)
+    wsc = Wsc::Base.new(uri, headers, true)
     message_ch = Channel(String).new
     close_ch = Channel(String).new
     wsc.on_message { |message| message_ch.send(message) }
@@ -115,7 +115,7 @@ describe Wsc do
     server = TestWsServer.run(HOST, PORT, handlers, true)
     headers = HTTP::Headers.new
     uri = "wss://#{HOST}:#{PORT}/"
-    wsc = Wsc::App.new(uri, headers, true)
+    wsc = Wsc::Base.new(uri, headers, true)
     message_ch = Channel(String).new
     close_ch = Channel(String).new
     ping_pong_ch = Channel(String).new
