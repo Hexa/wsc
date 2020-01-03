@@ -64,18 +64,17 @@ describe Wsc do
       select
       when message = message_ch.receive
         message.should eq("open")
-        message_ch.close
       when message = close_ch.receive
         message.should eq("close")
-        close_ch.close
-        timer_ch.close
         break
       when timer_ch.receive
-        timer_ch.close
         fail "Timeout"
         break
       end
     end
+    message_ch.close
+    close_ch.close
+    timer_ch.close
     server.close
     wsc.close
   end
@@ -95,18 +94,17 @@ describe Wsc do
       select
       when message = message_ch.receive
         message.should eq("open")
-        message_ch.close
       when message = close_ch.receive
         message.should eq("close")
-        close_ch.close
-        timer_ch.close
         break
       when timer_ch.receive
-        timer_ch.close
         fail "Timeout"
         break
       end
     end
+    message_ch.close
+    close_ch.close
+    timer_ch.close
     server.close
     wsc.close
   end
@@ -131,21 +129,20 @@ describe Wsc do
       select
       when message = message_ch.receive
         message.should eq("open")
-        message_ch.close
       when message = close_ch.receive
         message.should eq("close")
-        close_ch.close
-        timer_ch.close
         break
       when message = ping_pong_ch.receive
         message.should eq("ping")
-        ping_pong_ch.close
       when timer_ch.receive
-        timer_ch.close
         fail "Timeout"
         break
       end
     end
+    message_ch.close
+    close_ch.close
+    timer_ch.close
+    ping_pong_ch.close
     message_ch.closed?.should eq(true)
     close_ch.closed?.should eq(true)
     ping_pong_ch.closed?.should eq(true)
