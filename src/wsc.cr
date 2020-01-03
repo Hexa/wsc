@@ -6,7 +6,7 @@ DEFAULT_URI = "ws://127.0.0.1/"
 uri = DEFAULT_URI
 insecure = false
 
-OptionParser.parse! do |parser|
+OptionParser.parse do |parser|
   parser.banner = "Usage: wsc [arguments]"
   parser.on("-u URI", "--uri URI", "ws uri") { |name| uri = name }
   parser.on("-i", "--insecure", "ignore certificate verify") { insecure = true }
