@@ -26,8 +26,8 @@ begin
   wsc.on_binary do |binary|
     puts binary.hexdump
   end
-  wsc.on_close do |message|
-    puts message
+  wsc.on_close do |code, message|
+    puts "code: #{code}, message: #{message}"
   end
   wsc.run
 rescue ex

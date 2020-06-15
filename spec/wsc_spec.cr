@@ -43,7 +43,7 @@ handlers = [
     spawn do
       ws.send("open")
       sleep 1
-      ws.close("close")
+      ws.close(HTTP::WebSocket::CloseCode::NormalClosure, "close")
     end
   end,
 ]
@@ -57,7 +57,7 @@ describe Wsc do
     message_ch = Channel(String).new
     close_ch = Channel(String).new
     wsc.on_message { |message| message_ch.send(message) }
-    wsc.on_close { |message| close_ch.send(message) }
+    wsc.on_close { |code, message| close_ch.send(message) }
     spawn { wsc.run }
     timer_ch = timer(2)
     loop do
@@ -87,7 +87,7 @@ describe Wsc do
     message_ch = Channel(String).new
     close_ch = Channel(String).new
     wsc.on_message { |message| message_ch.send(message) }
-    wsc.on_close { |message| close_ch.send(message) }
+    wsc.on_close { |code, message| close_ch.send(message) }
     spawn { wsc.run }
     timer_ch = timer(2)
     loop do
@@ -118,7 +118,7 @@ describe Wsc do
     close_ch = Channel(String).new
     ping_pong_ch = Channel(String).new
     wsc.on_message { |message| message_ch.send(message) }
-    wsc.on_close { |message| close_ch.send(message) }
+    wsc.on_close { |code, message| close_ch.send(message) }
     wsc.on_pong do |message|
       ping_pong_ch.send(message)
     end

@@ -65,12 +65,12 @@ module Wsc
     end
 
     def on_close
-      @ws.on_close do |message|
-        puts "on_close: #{message}"
+      @ws.on_close do |code, message|
+        puts "on_close: #{code}, #{message}"
       end
     end
 
-    def on_close(&block : String ->)
+    def on_close(&block : HTTP::WebSocket::CloseCode, String ->)
       @ws.on_close &block
     end
 
