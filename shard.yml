@@ -8,6 +8,6 @@ targets:
   wsc:
     main: src/wsc
 
-crystal: 0.30.0
+crystal: 0.35.0
 
 license: MIT
