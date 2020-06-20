@@ -15,13 +15,13 @@ format:
 	crystal tool format src
 
 
-.PHONY: ubuntu-16.04 ubuntu-18.04
+.PHONY: ubuntu-16.04 ubuntu-18.04 ubuntu-20.04
 
 BRANCH ?= develop
 TAG := $(BRANCH)
 TARGET = $@
 
-ubuntu-16.04 ubuntu-18.04:
+ubuntu-16.04 ubuntu-18.04 ubuntu-20.04:
 	docker image build -t wsc:$(TARGET) --build-arg branch=$(TAG) --build-arg os=$(TARGET) --no-cache --output . docker/
 	tar czf wsc-$(TARGET).tar.gz wsc
 	rm wsc
