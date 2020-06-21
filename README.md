@@ -1,5 +1,7 @@
 # wsc
 
+![Crystal CI](https://github.com/Hexa/wsc/workflows/Crystal%20CI/badge.svg)
+
 WebSocket Client
 
 ## Installation
